@@ -23,7 +23,7 @@ var minimist = require('minimist');
 
 var serverOptions = {
   string: 'server',
-  default: {server: 'http://localhost:8080'}
+  default: {server: 'http://localhost:8181'}
 };
 
 var options = minimist(process.argv.slice(2), serverOptions);

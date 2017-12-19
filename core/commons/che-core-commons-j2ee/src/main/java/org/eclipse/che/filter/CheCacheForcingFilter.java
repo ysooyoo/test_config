@@ -21,7 +21,9 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Forcing caching for the given URL resource patterns.
@@ -48,6 +50,16 @@ public class CheCacheForcingFilter extends CacheForcingFilter {
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
       throws IOException, ServletException {
     for (Pattern pattern : actionPatterns) {
+      if (((HttpServletRequest) request).getRequestURI().contains("dashboard")) {
+        Cookie[] cookies = ((HttpServletRequest) request).getCookies();
+        if (cookies == null) {
+          ((HttpServletResponse) response).sendRedirect("/widexpert");
+          return;
+        }
+        super.doFilter(request, response, chain);
+        return;
+      }
+
       if (pattern.matcher(((HttpServletRequest) request).getRequestURI()).matches()) {
         super.doFilter(request, response, chain);
         return;

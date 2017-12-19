@@ -51,6 +51,7 @@ import org.eclipse.che.api.machine.server.model.impl.SnapshotImpl;
 import org.eclipse.che.api.machine.server.spi.Instance;
 import org.eclipse.che.api.machine.server.spi.SnapshotDao;
 import org.eclipse.che.api.workspace.server.event.WorkspaceCreatedEvent;
+import org.eclipse.che.api.workspace.server.exception.LimitExceededException;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.server.spi.WorkspaceDao;
@@ -791,27 +792,40 @@ public class WorkspaceManager {
     return nameIfNoUser;
   }
 
+  @Inject
+  @Named("wide.limit.workspace.count")
+  private int limitWorkspaceCount;
+
   private WorkspaceImpl doCreateWorkspace(
       WorkspaceConfig config, Account account, Map<String, String> attributes, boolean isTemporary)
       throws NotFoundException, ServerException, ConflictException {
-    final WorkspaceImpl workspace =
-        WorkspaceImpl.builder()
-            .generateId()
-            .setConfig(config)
-            .setAccount(account)
-            .setAttributes(attributes)
-            .setTemporary(isTemporary)
-            .build();
-    workspace.getAttributes().put(CREATED_ATTRIBUTE_NAME, Long.toString(currentTimeMillis()));
-    workspaceDao.create(workspace);
-    LOG.info(
-        "Workspace '{}/{}' with id '{}' created by user '{}'",
-        account.getName(),
-        workspace.getConfig().getName(),
-        workspace.getId(),
-        sessionUserNameOr("undefined"));
-    eventService.publish(new WorkspaceCreatedEvent(workspace));
-    return workspace;
+    List<WorkspaceImpl> list =
+        workspaceDao.getWorkspaces(EnvironmentContext.getCurrent().getSubject().getUserId());
+    if (list.size() >= limitWorkspaceCount) {
+      throw new LimitExceededException(
+          "You are not allowed to create more workspaces. you allowed to create "
+              + limitWorkspaceCount);
+    } else {
+
+      final WorkspaceImpl workspace =
+          WorkspaceImpl.builder()
+              .generateId()
+              .setConfig(config)
+              .setAccount(account)
+              .setAttributes(attributes)
+              .setTemporary(isTemporary)
+              .build();
+      workspace.getAttributes().put(CREATED_ATTRIBUTE_NAME, Long.toString(currentTimeMillis()));
+      workspaceDao.create(workspace);
+      LOG.info(
+          "Workspace '{}/{}' with id '{}' created by user '{}'",
+          account.getName(),
+          workspace.getConfig().getName(),
+          workspace.getId(),
+          sessionUserNameOr("undefined"));
+      eventService.publish(new WorkspaceCreatedEvent(workspace));
+      return workspace;
+    }
   }
 
   private WorkspaceImpl getByKey(String key) throws NotFoundException, ServerException {

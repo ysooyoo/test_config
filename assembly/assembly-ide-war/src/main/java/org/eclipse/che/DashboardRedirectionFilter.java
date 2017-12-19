@@ -18,6 +18,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -34,6 +35,12 @@ public class DashboardRedirectionFilter implements Filter {
       throws IOException, ServletException {
     HttpServletRequest req = (HttpServletRequest) request;
     HttpServletResponse resp = (HttpServletResponse) response;
+
+    Cookie[] cookies = ((HttpServletRequest) request).getCookies();
+    if (cookies == null) {
+      ((HttpServletResponse) response).sendRedirect("/widexpert");
+      return;
+    }
 
     if ("GET".equals(req.getMethod()) && !projectPattern.matcher(req.getRequestURI()).matches()) {
       resp.sendRedirect("/dashboard/");

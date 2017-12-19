@@ -16,6 +16,8 @@ services:
     image: <%= ENV["IMAGE_CHE_MULTIUSER"] %>
 <% else -%>
     image: <%= ENV["IMAGE_CHE"] %>
+    mem_limiit: 800m
+    memswap_limit: 0
 <% end -%>
     env_file:
 <% if @compose_file_for_containers == true -%>
@@ -37,7 +39,8 @@ services:
       - '/var/run/docker.sock:/var/run/docker.sock'
       - '<%= scope.lookupvar('che::che_instance') -%>/data:/data'
       - '<%= scope.lookupvar('che::che_instance') -%>/logs:/logs'
-      - '<%= scope.lookupvar('che::che_instance') -%>/config/che:/conf'
+     # - '<%= scope.lookupvar('che::che_instance') -%>/config/che:/conf'
+      - '/home/ubuntu/wideconf:/conf'		
 <% if scope.lookupvar('che::che_dev_env') == 'on' -%>
       - '<%= scope.lookupvar('che::che_assembly') -%>:/assembly'
 <% end -%>
