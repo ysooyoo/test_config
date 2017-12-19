@@ -16,7 +16,7 @@ services:
     image: <%= ENV["IMAGE_CHE_MULTIUSER"] %>
 <% else -%>
     image: <%= ENV["IMAGE_CHE"] %>
-    mem_limiit: 800m
+    mem_limit: 800m
     memswap_limit: 0
 <% end -%>
     env_file:
