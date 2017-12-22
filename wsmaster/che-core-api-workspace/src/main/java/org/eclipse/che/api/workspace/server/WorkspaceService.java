@@ -34,6 +34,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Example;
 import io.swagger.annotations.ExampleProperty;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
@@ -64,15 +65,11 @@ import org.eclipse.che.api.machine.server.model.impl.CommandImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 import org.eclipse.che.api.machine.shared.dto.CommandDto;
 import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
+import org.eclipse.che.api.workspace.server.exception.NoServeInWidexpertException;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ProjectConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
-import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
-import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
-import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
-import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
-import org.eclipse.che.api.workspace.shared.dto.WsAgentHealthStateDto;
+import org.eclipse.che.api.workspace.shared.dto.*;
 import org.eclipse.che.commons.env.EnvironmentContext;
 
 /**
@@ -296,6 +293,25 @@ public class WorkspaceService extends Service {
       @ApiParam(value = "The workspace update", required = true) WorkspaceDto update)
       throws BadRequestException, ServerException, ForbiddenException, NotFoundException,
           ConflictException {
+    // ram limit
+    Map<String, EnvironmentDto> env = update.getConfig().getEnvironments();
+    Iterator envIt = env.keySet().iterator();
+    while (envIt.hasNext()) {
+      EnvironmentDto stack_env = env.get(envIt.next());
+      Map<String, ExtendedMachineDto> machines = stack_env.getMachines();
+      Iterator it = machines.keySet().iterator();
+      while (it.hasNext()) {
+        ExtendedMachineDto machine = machines.get(it.next());
+        String memLimitBytes = machine.getAttributes().get("memoryLimitBytes");
+
+        Long base = new Long(2147483648L);
+        if (Long.parseLong(memLimitBytes) > base) {
+          throw new NoServeInWidexpertException(
+              "서비스 준비 중입니다. Limit Memory 2G 입니다." + memLimitBytes);
+        }
+      }
+    }
+
     requiredNotNull(update, "Workspace configuration");
     validator.validateWorkspace(update);
     relativizeRecipeLinks(update.getConfig());

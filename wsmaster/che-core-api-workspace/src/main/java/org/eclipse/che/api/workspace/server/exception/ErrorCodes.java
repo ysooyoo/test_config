@@ -19,6 +19,7 @@ package org.eclipse.che.api.workspace.server.exception;
 public final class ErrorCodes {
 
   public static final int LIMIT_EXCEEDED = 10000;
+  public static final int NO_SERVE_IN_WIDEXPERT = 20000;
 
   private ErrorCodes() {}
 }
