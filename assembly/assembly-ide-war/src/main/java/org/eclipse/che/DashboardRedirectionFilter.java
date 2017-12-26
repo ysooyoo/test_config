@@ -38,7 +38,8 @@ public class DashboardRedirectionFilter implements Filter {
 
     Cookie[] cookies = ((HttpServletRequest) request).getCookies();
     if (cookies == null) {
-      ((HttpServletResponse) response).sendRedirect("/widexpert");
+      ((HttpServletResponse) response)
+          .sendRedirect("http://211.239.163.237/comm-api/api/portal/v1/check_token");
       return;
     }
 

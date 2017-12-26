@@ -5,16 +5,16 @@
       <div>{{cheWorkspaceRamAllocationSliderController.inputVal}} GB</div>
     </div>
     <div flex class="slider-holder">
-      <md-slider min="0.5" max="2" step="0.5"
-                 ng-model="cheWorkspaceRamAllocationSliderController.inputVal"
-                 aria-label="Amount of RAM"
-                 ng-change="cheWorkspaceRamAllocationSliderController.onChange()"></md-slider>
-    </div>
-    <div layout="column" layout-align="start end">
-        <div class="slider-max-ram-caption">2 GB</div>
-    </div>
-    <div layout="column" layout-align="center start" class="slider-input">
-      <md-input-container>
+        <md-slider min="0.5" max="2" step="0.5"
+                   ng-model="cheWorkspaceRamAllocationSliderController.inputVal"
+                   aria-label="Amount of RAM"
+                   ng-change="cheWorkspaceRamAllocationSliderController.onChange()"></md-slider>
+      </div>
+      <div layout="column" layout-align="start end">
+          <div class="slider-max-ram-caption">2 GB</div>
+      </div>
+      <div layout="column" layout-align="center start" class="slider-input">
+        <md-input-container>
         <input type="number" min="0.5" max="2" step="0.5"
                ng-model="cheWorkspaceRamAllocationSliderController.inputVal"
                aria-label="Amount of RAM"

@@ -39,7 +39,7 @@ services:
       - '/var/run/docker.sock:/var/run/docker.sock'
       - '<%= scope.lookupvar('che::che_instance') -%>/data:/data'
       - '<%= scope.lookupvar('che::che_instance') -%>/logs:/logs'
-      - '/home/ubuntu/wideconf:/conf'
+      - '~/CheHome/conf:/conf'
 <% if scope.lookupvar('che::che_dev_env') == 'on' -%>
       - '<%= scope.lookupvar('che::che_assembly') -%>:/assembly'
 <% end -%>

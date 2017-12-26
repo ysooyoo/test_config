@@ -11,7 +11,11 @@
 package org.eclipse.che.filter;
 
 import com.xemantic.tadedon.servlet.CacheForcingFilter;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
@@ -23,7 +27,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Forcing caching for the given URL resource patterns.
@@ -31,6 +34,10 @@ import javax.servlet.http.HttpServletResponse;
  * @author Max Shaposhnik
  */
 public class CheCacheForcingFilter extends CacheForcingFilter {
+
+  //  @Inject
+  //  @Named("wide.endpoint")
+  //  public String checkTokenEndPoint;
 
   private Set<Pattern> actionPatterns = new HashSet<>();
 
@@ -49,22 +56,53 @@ public class CheCacheForcingFilter extends CacheForcingFilter {
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
       throws IOException, ServletException {
-    for (Pattern pattern : actionPatterns) {
-      if (((HttpServletRequest) request).getRequestURI().contains("dashboard")) {
-        Cookie[] cookies = ((HttpServletRequest) request).getCookies();
-        if (cookies == null) {
-          ((HttpServletResponse) response).sendRedirect("/widexpert");
-          return;
-        }
-        super.doFilter(request, response, chain);
-        return;
-      }
 
-      if (pattern.matcher(((HttpServletRequest) request).getRequestURI()).matches()) {
-        super.doFilter(request, response, chain);
+    for (Pattern pattern : actionPatterns) {
+
+      Cookie[] cookies = ((HttpServletRequest) request).getCookies();
+      boolean tokenInvalid = false;
+      if (cookies != null) {
+        String token = "";
+        for (Cookie cookie : cookies) {
+          if (cookie.getName().equals("U-TOKEN")) {
+            token = cookie.getValue();
+            return;
+          }
+        }
+
+        String checkTokenEndPoint = "http://211.239.163.237/comm-api/api/portal/v1/check_token";
+        tokenInvalid = checkToken(checkTokenEndPoint, token);
+      }
+      if (!tokenInvalid) {
+        response.setContentType("text/html; charset=UTF-8");
+        PrintWriter out = response.getWriter();
+        out.println(
+            "<script>alert('잘못된 접근입니다. 포털 시스템을 통하여 접근하시기 바랍니다.'); window.close();</script>");
+        out.flush();
         return;
       }
     }
     chain.doFilter(request, response);
+  }
+
+  private boolean checkToken(String checkTokenEndPoint, String token) {
+    try {
+      URL obj = new URL(checkTokenEndPoint);
+      HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+      con.setRequestMethod("POST");
+      con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+      con.setDoOutput(true);
+      DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+      wr.writeBytes("token=" + token);
+      wr.flush();
+      wr.close();
+
+      int responseCode = con.getResponseCode();
+
+      return (responseCode == 200);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
+    }
   }
 }
